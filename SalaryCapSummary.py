@@ -2,14 +2,12 @@
 SalaryCapSummary.py
 
 TODO:
-    Add logging
     Make graphs
-    Cleanup and uncomment dbStorage
 '''
 
 import argparse
-from urllib.request import urlopen
 from bs4 import BeautifulSoup
+from urllib.request import urlopen
 import financialDB
 
 class SalaryCapTeamInfo:
@@ -23,14 +21,12 @@ class SalaryCapTeamInfo:
         self.year5   = str()
         self.year6   = str()
 
-    def addPlayer(player):
-        self.players.append(player)
-
 
 class PlayerContractsInfo:
     def __init__(self):
         self.name        = str()
         self.age         = int()
+        self.team        = str()
         self.year1       = str()
         self.year2       = str()
         self.year3       = str()
@@ -41,7 +37,9 @@ class PlayerContractsInfo:
         self.guaranteed  = str()
 
 
-def getPlayerContracts():
+def getPlayerContracts(db):
+    print('\nGetting PLayers'' contracts infomation...\n')
+
     teams = [
         ("ATL", "Atlanta Hawks"),          ("BOS", "Boston Celtics"),     ("BRK", "Brooklyn Nets"), 
         ("CHO", "Charlotte Hornets"),      ("CHI", "Chicago Bulls"),      ("CLE", "Cleveland Cavaliers"), 
@@ -55,9 +53,9 @@ def getPlayerContracts():
         ("TOR", "Toronto Raptors"),        ("UTA", "Utah Jazz"),          ("WAS", "Washington Wizards"),
     ]
 
-    player_contracts_dict = dict()
+    player_contracts = list()
     for team in teams:
-        print(team[0])
+        print(team[1])
         url = 'https://www.basketball-reference.com/contracts/' + team[0] + '.html'
         html = urlopen(url)
         soup = BeautifulSoup(html, 'lxml')
@@ -80,12 +78,12 @@ def getPlayerContracts():
             row_data = [str(i.text).replace(u'\xa0', '') for i in td]
             if row_data and row_data[0]: players_contracts_data.append(row_data)
 
-        players_data = list()
         for player, data in zip(players, players_contracts_data):
 
             player_contract_data = PlayerContractsInfo()
 
             player_contract_data.name        = player
+            player_contract_data.team        = team[1]
             player_contract_data.age         = data[0]
             player_contract_data.year1       = data[1]
             player_contract_data.year2       = data[2]
@@ -96,17 +94,17 @@ def getPlayerContracts():
             player_contract_data.signedUsing = data[7]
             player_contract_data.guaranteed  = data[8]
 
-            player_contracts_dict[team[1]] = SalaryCapTeamInfo()
-            player_contracts_dict[team[1]].players.append(player_contract_data)
+            player_contracts.append(player_contract_data)
 
     # Store to database [Players].[Payroll2019-20]
-    # cnxn = financialDB.connect()
-    # financialDB.insertPlayersPayrollInfo(cnxn, player_contracts_dict)
+    if db:
+        cnxn = financialDB.connect()
+        financialDB.insertPlayersPayrollInfo(cnxn, player_contracts)
 
 
-def getTeamSalaryCapInfo():
+def getTeamSalaryCapInfo(db):
 
-    print('Getting Team''s salary cap infomation...')
+    print('\nGetting Team''s salary cap infomation...')
 
     url = 'https://www.basketball-reference.com/contracts/'
     html = urlopen(url)
@@ -138,25 +136,27 @@ def getTeamSalaryCapInfo():
         teams_contract_dict[team].year6 = team_contract_data[6]
 
     # Store to database [Teams].[SalaryCapOverview2019-20]
-    # cnxn = financialDB.connect()
-    # financialDB.insertTeamsSalaryCapInfo(cnxn, teams_contract_dict)
+    if db:
+        cnxn = financialDB.connect()
+        financialDB.insertTeamsSalaryCapInfo(cnxn, teams_contract_dict)
 
 def processCmdArgs():
 
     parser = argparse.ArgumentParser(description='Collect teams salary cap infomation from https://www.basketball-reference.com/contracts/')
 
     parser.add_argument('--teams', dest='teams', required=False, action='store_true',
-                         help='Insert Teams Salary Cap Infomation Data into Existing Table in Database')
+                         help='Scrape Teams Salary Cap Infomation Data')
 
     parser.add_argument('--players', dest='players', required=False, action='store_true',
-                        help='Insert Players contracts information into Existing Table in Database')
+                        help='Scrape Players contracts information')
+
+    parser.add_argument('--db', dest='db', required=False, action='store_true',
+                         help='Insert Data into Existing Table in Database')
 
     return parser.parse_args()
 
 if __name__ == "__main__":
     args = processCmdArgs()
 
-    if args.teams:
-        getTeamSalaryCapInfo()
-    if args.players:
-        getPlayerContracts()
+    if args.teams: getTeamSalaryCapInfo(args.db)
+    if args.players: getPlayerContracts(args.db)

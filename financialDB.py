@@ -31,6 +31,10 @@ def insertTeamsSalaryCapInfo(cnxn, teams):
     # Create connection
     cursor = cnxn.cursor()
 
+    # Delete previous data from table and reseed primary keys
+    cursor.execute("TRUNCATE TABLE [Teams].[SalaryCapOverview2019-20]")
+    cursor.execute("DBCC CHECKIDENT ('[Teams].[SalaryCapOverview2019-20]', RESEED, 1)")
+
     insert_query = '''INSERT INTO [Teams].[SalaryCapOverview2019-20]
                             ([Team],
                              [2019-20], [2020-21], [2021-22], [2022-23], [2023-24], [2024-25])
@@ -47,10 +51,14 @@ def insertTeamsSalaryCapInfo(cnxn, teams):
     # Commit Inserts
     cnxn.commit()
 
-def insertPlayersPayrollInfo(cnxn, teams):
+def insertPlayersPayrollInfo(cnxn, players):
 
     # Create connection
     cursor = cnxn.cursor()
+
+    # Delete previous data from table and reseed primary keys
+    cursor.execute("TRUNCATE TABLE [Players].[Payroll2019-20]")
+    cursor.execute("DBCC CHECKIDENT ('[Players].[Payroll2019-20]', RESEED, 1)")
 
     insert_query = '''INSERT INTO [Players].[Payroll2019-20]
                             ([Team], 
@@ -59,16 +67,15 @@ def insertPlayersPayrollInfo(cnxn, teams):
                              [SignedUsing], [Guaranteed])
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
 
-    for team, data in teams.items():
-        for player in teams[team].players:
+    for player in players:
 
-            values = (team,                                     \
-                      player.name,  player.age,                 \
-                      player.year1, player.year2, player.year3, \
-                      player.year4, player.year5, player.year6,
-                      player.signedUsing, player.guaranteed)
+        values = (player.team,                              \
+                  player.name,  player.age,                 \
+                  player.year1, player.year2, player.year3, \
+                  player.year4, player.year5, player.year6,
+                  player.signedUsing, player.guaranteed)
 
-            cursor.execute(insert_query, values)
+        cursor.execute(insert_query, values)
 
     # Commit Inserts
     cnxn.commit()
