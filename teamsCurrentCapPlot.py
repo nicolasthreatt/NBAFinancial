@@ -10,41 +10,14 @@ import os
 import pandas as pd
 import pyodbc
 
-
-def connectDB():
-
-    # Database Credentials
-    server   = os.getenv('azureServer')
-    database = os.getenv('azureDBFinancial')
-    username = os.getenv('azureDBUsername')
-    password = os.getenv('azureDBPswd')
-    driver   = '{ODBC Driver 17 for SQL Server}'
-
-    # Connect to Database
-    cnxn = pyodbc.connect('DRIVER='+driver+';      \
-                           SERVER='+server+';      \
-                           PORT=1433;              \
-                           DATABASE='+database+';  \
-                           UID='+username+';       \
-                           PWD='+ password)
-    return cnxn
+import financialDB
 
 
 def getTeamsSalaryCapData(season):
 
-    '''
-    TODO: Move lines 40-45 into a seperate file where every other file can access, something such as
-    def importTable(sqlTable):
-    '''
-    # Connect to Database
-    cnxn = connectDB()
+    sql_table_df = financialDB.readTable("Teams", "SalaryCapOverview2019-20")
 
-    # Get Stats from Database
-    sqlDB = pd.read_sql_query(
-        '''SELECT *
-            FROM [Teams].[SalaryCapOverview2019-20]''', cnxn)
-
-    year1 = sqlDB[['Team', '2019-20']]
+    year1 = sql_table_df[['Team', '2019-20']]
 
     year1[season] = year1[season].map(lambda x: x.replace(",", "").replace("$", ""))
     year1[season] = year1[season].astype(int)

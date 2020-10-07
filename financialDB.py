@@ -3,7 +3,6 @@ Steps to follow: https://docs.microsoft.com/en-us/sql/connect/python/pyodbc/pyth
 Connect to Azure SQL Database: https://docs.microsoft.com/en-us/azure/azure-sql/database/connect-query-python?tabs=windows 
 '''
 
-
 import pyodbc
 import os
 
@@ -25,6 +24,20 @@ def connect():
                            UID='+username+';       \
                            PWD='+ password)
     return cnxn
+
+def readTable(schema, table):
+    
+    import pandas as pd
+
+    # Connect to Database
+    cnxn = connect()
+
+    # Get Stats from Database
+    table = pd.read_sql_query(
+        '''SELECT *
+            FROM [{}].[{}]'''.format(schema, table), cnxn)
+
+    return table
 
 def insertTeamsSalaryCapInfo(cnxn, teams):
 
