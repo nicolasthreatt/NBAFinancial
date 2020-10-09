@@ -3,7 +3,8 @@ teamsCurrrentCapPlot.py
 
 
 TODO:
-    - Compare N teams vs. each other 
+    - Format plot for Compare N teams vs. each other 
+    - Cleanup/Reduce Code
 '''
 
 import argparse
@@ -15,12 +16,41 @@ import os
 import pandas as pd
 import pyodbc
 
+# Add to Utils.py
+def getCmdTeam(cmdTeamAbr):
+    teams = [
+        ("ATL", "Atlanta Hawks"),          ("BOS", "Boston Celtics"),     ("BRK", "Brooklyn Nets"), 
+        ("CHO", "Charlotte Hornets"),      ("CHI", "Chicago Bulls"),      ("CLE", "Cleveland Cavaliers"), 
+        ("DAL", "Dallas Mavericks"),       ("DEN", "Denver Nuggets"),     ("DET", "Detroit Pistons"), 
+        ("GSW", "Golden State Warriors"),  ("HOU", "Houston Rockets"),    ("IND", "Indiana Pacers"),
+        ("LAC", "Los Angeles Clippers"),   ("LAL", "Los Angeles Lakers"), ("MEM", "Memphis Grizzlies"),
+        ("MIA", "Miami Heat"),             ("MIL", "Milwaukee Bucks"),    ("MIN", "Minnesota Timberwolves"),
+        ("NOP", "New Orleans Pelicans"),   ("NYK", "New York Knicks"),    ("OKC", "Oklahoma City Thunder"),
+        ("ORL", "Orlando Magic"),          ("PHI", "Philadelphia 76ers"), ("PHO", "Phoenix Suns"),
+        ("POR", "Portland Trail Blazers"), ("SAC", "Sacramento Kings"),   ("SAS", "San Antonio Spurs"),
+        ("TOR", "Toronto Raptors"),        ("UTA", "Utah Jazz"),          ("WAS", "Washington Wizards"),
+    ]
 
-def getTeamsSalaryCapData(season):
+    for team in teams:
+        if team[0] == cmdTeamAbr:
+            return team[1]
+
+    sys.exit('Invalid Team!')
+
+
+def getTeamsSalaryCapData(season, cmdTeamsAbr=None):
 
     sql_table_df = financialDB.readTable("Teams", "SalaryCapOverview{}".format(season))
 
-    year1 = sql_table_df[['Team', season]]
+    teams = [ getCmdTeam(cmdTeamAbr) for cmdTeamAbr in cmdTeamsAbr ]
+
+    print(teams)
+    
+    year1 = pd.DataFrame()
+    if teams:
+        year1 = sql_table_df[['Team', season]].loc[sql_table_df['Team'].isin(teams)]
+    else:
+        year1 = sql_table_df[['Team', season]]
 
     year1[season] = year1[season].map(lambda x: x.replace(",", "").replace("$", ""))
     year1[season] = year1[season].astype(int)
@@ -42,8 +72,8 @@ def createPlot(data, season):
 
     # Import Numbers
     yearMean    = data[season].mean()
-    salayCapMin = 109140000
-    luxuryTax   = 132000000
+    salayCapMin = 109140000    # 2019-20 Season
+    luxuryTax   = 132000000    # 2019-20 Season
     
     # Draw lines at official NBA Salary Cap, Team Average, and Luxary Tax for 2019-20 Season
     plt.axhline(y=salayCapMin, linestyle='--', linewidth=1, color='k')
@@ -75,8 +105,8 @@ def processCmdArgs():
     parser.add_argument('--season', dest='season', type=str, metavar='', required=False, default='2019-20',
                          help="Teams' Season for Salary Cap Infomation")
     
-    parser.add_argument('--team', dest='team', type=str, metavar='', required=False,
-                         help="Abbreviated Team City")
+    parser.add_argument('--teams', dest='teams', nargs='+', type=str, metavar='', required=False, default=list(),
+                         help="Abbreviated Teams City")
 
     return parser.parse_args()
 
@@ -84,4 +114,4 @@ def processCmdArgs():
 if __name__ == "__main__":
     args = processCmdArgs()
 
-    getTeamsSalaryCapData(args.season)
+    getTeamsSalaryCapData(args.season, cmdTeamsAbr=args.teams)
