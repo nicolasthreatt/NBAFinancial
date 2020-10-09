@@ -1,14 +1,13 @@
 '''
 SalaryCapSummary.py
-
-TODO:
-    Make graphs
 '''
+
 
 import argparse
 from bs4 import BeautifulSoup
-from urllib.request import urlopen
 import financialDB
+from urllib.request import urlopen
+
 
 class SalaryCapTeamInfo:
     def __init__(self):
@@ -96,9 +95,9 @@ def getPlayerContracts(db):
 
             player_contracts.append(player_contract_data)
 
-    # Store to database [Players].[Payroll2019-20]
+    season = "2019-20"
     if db:
-        cnxn = financialDB.connect()
+        cnxn = financialDB.connect("Players", "Payroll{}".format(season))
         financialDB.insertPlayersPayrollInfo(cnxn, player_contracts)
 
 
@@ -135,9 +134,9 @@ def getTeamSalaryCapInfo(db):
         teams_contract_dict[team].year5 = team_contract_data[5]
         teams_contract_dict[team].year6 = team_contract_data[6]
 
-    # Store to database [Teams].[SalaryCapOverview2019-20]
+    season = "2019-20"
     if db:
-        cnxn = financialDB.connect()
+        cnxn = financialDB.connect("Teams", "SalaryCapOverview{}".format(season))
         financialDB.insertTeamsSalaryCapInfo(cnxn, teams_contract_dict)
 
 def processCmdArgs():

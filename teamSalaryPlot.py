@@ -1,9 +1,8 @@
 '''
-teamContracts.py
+teamSalaryPlot.py
 
 TODO:
     - Finish Command line arguments for individual year
-    - Cleanp
 '''
 
 import argparse
@@ -29,7 +28,7 @@ class ContractInfo:
         self.contracts  = contracts
 
 
-def getFutureSeason(currentSeason, futureSeason):
+def getFutureSeasons(currentSeason, futureSeason):
     return (str(currentSeason)   + '-' + str(futureSeason),
             str(currentSeason+1) + '-' + str(futureSeason+1),
             str(currentSeason+2) + '-' + str(futureSeason+2),
@@ -64,9 +63,7 @@ def getTeamsSalaryCapData(season, cmdTeamAbr):
 
     sql_table_df = financialDB.readTable("Players", "Payroll{}".format(season))
 
-    currentSeason = int(season[:4])
-    futureSeason  = int(season[-2:])
-    contractYears = getFutureSeason(currentSeason, futureSeason)
+    contractYears = getFutureSeasons(currentSeason=int(season[:4]), futureSeason=int(season[-2:]))
 
     for year in contractYears:
 
@@ -93,8 +90,7 @@ def getTeamsSalaryCapData(season, cmdTeamAbr):
 
 def createPlots(df_dict, season, cmdTeamAbr):
 
-    (currentSeason, futureSeason) = (int(season[:4]), int(season[-2:]))
-    contractYears = getFutureSeason(currentSeason, futureSeason)
+    contractYears = getFutureSeasons(currentSeason=int(season[:4]), futureSeason=int(season[-2:]))
 
     teams = getCmdTeam(cmdTeamAbr) if cmdTeamAbr else df_dict.keys()
 
