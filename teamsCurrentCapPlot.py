@@ -5,11 +5,6 @@ File:
 Description:
     - Graphs each team current total salary for its players
 
-Revision Data:
-    - 10.12.2020:
-        + Axis format
-        + Cleanup
-
 TODO:
     - Investigate how to add Team Salary $ on top of bar when comparing teams
     - Figure out better way than to hardcore values for Luxary Tax and Cap Min
