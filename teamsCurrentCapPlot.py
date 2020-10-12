@@ -1,20 +1,29 @@
 '''
-teamsCurrrentCapPlot.py
+File:
+    - teamsCurrrentCapPlot.py
 
+Description:
+    - Graphs each team current total salary for its players
+
+Revision Data:
+    - 10.12.2020:
+        + Axis format
+        + Cleanup
 
 TODO:
-    - Format plot for Compare N teams vs. each other 
-    - Cleanup/Reduce Code
+    - Investigate how to add Team Salary $ on top of bar when comparing teams
+    - Figure out better way than to hardcore values for Luxary Tax and Cap Min
 '''
+
 
 import argparse
 import financialDB
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mtick
-import numpy as np
 import os
 import pandas as pd
 import pyodbc
+import sys
+
 
 # Add to Utils.py
 def getCmdTeam(cmdTeamAbr):
@@ -44,67 +53,83 @@ def getTeamsSalaryCapData(season, cmdTeamsAbr=None):
 
     teams = [ getCmdTeam(cmdTeamAbr) for cmdTeamAbr in cmdTeamsAbr ]
 
-    print(teams)
-    
     year1 = pd.DataFrame()
     if teams:
         year1 = sql_table_df[['Team', season]].loc[sql_table_df['Team'].isin(teams)]
     else:
         year1 = sql_table_df[['Team', season]]
 
-    year1[season] = year1[season].map(lambda x: x.replace(",", "").replace("$", ""))
-    year1[season] = year1[season].astype(int)
+    year1[season] = year1[season].map(lambda x: x.replace(",", "").replace("$", "")).astype(int)
 
-    createPlot(year1, season)
+    seasonAvg = sql_table_df[season].map(lambda x: x.replace(",", "").replace("$", "")).astype(int).mean()
+
+    createPlot(year1, season, seasonAvg)
 
 
-def createPlot(data, season):
+def createPlot(data, season, seasonAvg):
 
     ax = data.plot(figsize=(10, 8), y=season, kind='bar')
 
-    # Add Axis Labels
+    # Edit Axis Labels
     ax.set_title("Teams Salary Salary Cap: {} Season".format(season))
-
     ax.set_xlabel("Teams")
-    ax.set_ylabel('Salary ($)')
-
+    ax.set_ylabel("Salary")
     ax.set_xticklabels(data['Team'])
+    plt.xticks(rotation=80)
 
-    # Import Numbers
-    yearMean    = data[season].mean()
-    salayCapMin = 109140000    # 2019-20 Season
-    luxuryTax   = 132000000    # 2019-20 Season
-    
-    # Draw lines at official NBA Salary Cap, Team Average, and Luxary Tax for 2019-20 Season
-    plt.axhline(y=salayCapMin, linestyle='--', linewidth=1, color='k')
-    ax.annotate('{0:,.0f}'.format(salayCapMin), xy=(26, salayCapMin + 1000000), fontsize=7)
+    # Set Y-Axis Limits
+    ax.set_ylim(ymin=100000000)
+    ax.set_ylim(ymax=140000000)
 
-    plt.axhline(y=yearMean, linestyle=':', linewidth=1, color='r')
-    ax.annotate('${0:,.0f}'.format(int(yearMean)), xy=(26, yearMean + 1000000), fontsize=7)
-
-    plt.axhline(y=luxuryTax, linestyle='-.', linewidth=1, color='m')
-    ax.annotate('${0:,.0f}'.format(luxuryTax), xy=(26, luxuryTax + 1000000), fontsize=8)
-    
-    # Add Extra Ticks
-    ax.set_yticks(list(ax.get_yticks()) + [salayCapMin, yearMean, luxuryTax])
+    # Format Y-Axis Ticks to Display $-Currency
+    ax.set_yticks(list(ax.get_yticks()))
     a = ax.get_yticks().tolist()
     a = ['${0:,.0f}'.format(int(val)) for val in a]
-
-    a[len(a) - 3] = 'Cap Minimum'
-    a[len(a) - 2] = 'Team Average'
-    a[len(a) - 1] = 'Luxury Tax'
-
     ax.set_yticklabels(a)
 
+    # Format Axis Values Sizing
+    ax.tick_params(axis='both', which='major', labelsize=7)
+    ax.tick_params(axis='both', which='minor', labelsize=7)
+
+    # Important Numbers
+    salayCapMin = 109140000    # 2019-20 Season
+    luxuryTax   = 132000000    # 2019-20 Season
+
+    textIncrement = 400000
+    data_size = len(data) - 0.55
+
+    # Draw lines and add text at NBA Salary Cap, Team Average, and Luxary Tax for 2019-20 Season
+    plt.axhline(y=salayCapMin, linestyle='--', linewidth=1, color='k')
+    ax.text(data_size, salayCapMin + textIncrement, 
+            'Cap Minimum - ${0:,.0f}'.format(salayCapMin),
+            fontsize = 7,
+            horizontalalignment="right")
+
+    plt.axhline(y=seasonAvg, linestyle=':', linewidth=1, color='r')
+    ax.text(data_size, int(seasonAvg) + textIncrement, 
+            'Team Average - ${0:,.0f}'.format(int(seasonAvg)),
+            fontsize = 7,
+            horizontalalignment="right")
+
+    plt.axhline(y=luxuryTax, linestyle='-.', linewidth=1, color='m')
+    ax.text(data_size, luxuryTax + textIncrement, 
+            'Luxury Tax - ${0:,.0f}'.format(luxuryTax),
+            fontsize = 7,
+            horizontalalignment="right")
+
+    # Display Plot
+    ax.get_legend().remove()
     plt.show()
 
+
+# Add to Utils.py
 def processCmdArgs():
 
     parser = argparse.ArgumentParser(description='Plotting teams salary cap infomation from https://www.basketball-reference.com/contracts/')
 
     parser.add_argument('--season', dest='season', type=str, metavar='', required=False, default='2019-20',
                          help="Teams' Season for Salary Cap Infomation")
-    
+
     parser.add_argument('--teams', dest='teams', nargs='+', type=str, metavar='', required=False, default=list(),
                          help="Abbreviated Teams City")
 
@@ -114,4 +139,4 @@ def processCmdArgs():
 if __name__ == "__main__":
     args = processCmdArgs()
 
-    getTeamsSalaryCapData(args.season, cmdTeamsAbr=args.teams)
+    getTeamsSalaryCapData(season=args.season, cmdTeamsAbr=args.teams)
