@@ -1,11 +1,15 @@
 '''
-SalaryCapSummary.py
+File: salaryCapSummary.py
+
+Description:
+    Scrapes from https://www.basketball-reference.com/contracts/ to collect teams salary cap data
+    and stores it into a cloud database
 '''
 
 
-import argparse
 from bs4 import BeautifulSoup
 import financialDB
+import utils
 from urllib.request import urlopen
 
 
@@ -23,38 +27,26 @@ class SalaryCapTeamInfo:
 
 class PlayerContractsInfo:
     def __init__(self):
-        self.name        = str()
-        self.age         = int()
-        self.team        = str()
-        self.year1       = str()
-        self.year2       = str()
-        self.year3       = str()
-        self.year4       = str()
-        self.year5       = str()
-        self.year6       = str()
-        self.signedUsing = str()
-        self.guaranteed  = str()
+        self.name         = str()
+        self.age          = int()
+        self.team         = str()
+        self.year1        = str()
+        self.year2        = str()
+        self.year3        = str()
+        self.year4        = str()
+        self.year5        = str()
+        self.year6        = str()
+        self.signed_using = str()
+        self.guaranteed   = str()
 
 
-def getPlayerContracts(db):
+def getPlayerContracts(season, db=False):
+
     print('\nGetting PLayers'' contracts infomation...\n')
 
-    teams = [
-        ("ATL", "Atlanta Hawks"),          ("BOS", "Boston Celtics"),     ("BRK", "Brooklyn Nets"), 
-        ("CHO", "Charlotte Hornets"),      ("CHI", "Chicago Bulls"),      ("CLE", "Cleveland Cavaliers"), 
-        ("DAL", "Dallas Mavericks"),       ("DEN", "Denver Nuggets"),     ("DET", "Detroit Pistons"), 
-        ("GSW", "Golden State Warriors"),  ("HOU", "Houston Rockets"),    ("IND", "Indiana Pacers"),
-        ("LAC", "Los Angeles Clippers"),   ("LAL", "Los Angeles Lakers"), ("MEM", "Memphis Grizzlies"),
-        ("MIA", "Miami Heat"),             ("MIL", "Milwaukee Bucks"),    ("MIN", "Minnesota Timberwolves"),
-        ("NOP", "New Orleans Pelicans"),   ("NYK", "New York Knicks"),    ("OKC", "Oklahoma City Thunder"),
-        ("ORL", "Orlando Magic"),          ("PHI", "Philadelphia 76ers"), ("PHO", "Phoenix Suns"),
-        ("POR", "Portland Trail Blazers"), ("SAC", "Sacramento Kings"),   ("SAS", "San Antonio Spurs"),
-        ("TOR", "Toronto Raptors"),        ("UTA", "Utah Jazz"),          ("WAS", "Washington Wizards"),
-    ]
-
     player_contracts = list()
-    for team in teams:
-        print(team[1])
+    for team in utils.getTeams():
+
         url = 'https://www.basketball-reference.com/contracts/' + team[0] + '.html'
         html = urlopen(url)
         soup = BeautifulSoup(html, 'lxml')
@@ -79,31 +71,30 @@ def getPlayerContracts(db):
 
         for player, data in zip(players, players_contracts_data):
 
-            player_contract_data = PlayerContractsInfo()
+            player_contracts_info = PlayerContractsInfo()
 
-            player_contract_data.name        = player
-            player_contract_data.team        = team[1]
-            player_contract_data.age         = data[0]
-            player_contract_data.year1       = data[1]
-            player_contract_data.year2       = data[2]
-            player_contract_data.year3       = data[3]
-            player_contract_data.year4       = data[4]
-            player_contract_data.year5       = data[5]
-            player_contract_data.year6       = data[6]
-            player_contract_data.signedUsing = data[7]
-            player_contract_data.guaranteed  = data[8]
+            player_contracts_info.name         = player
+            player_contracts_info.team         = team[1]
+            player_contracts_info.age          = data[0]
+            player_contracts_info.year1        = data[1]
+            player_contracts_info.year2        = data[2]
+            player_contracts_info.year3        = data[3]
+            player_contracts_info.year4        = data[4]
+            player_contracts_info.year5        = data[5]
+            player_contracts_info.year6        = data[6]
+            player_contracts_info.signed_using = data[7]
+            player_contracts_info.guaranteed   = data[8]
 
-            player_contracts.append(player_contract_data)
+            player_contracts.append(player_contracts_info)
 
-    season = "2019-20"
     if db:
         cnxn = financialDB.connect("Players", "Payroll{}".format(season))
         financialDB.insertPlayersPayrollInfo(cnxn, player_contracts)
 
 
-def getTeamSalaryCapInfo(db):
+def getTeamSalaryCapInfo(season, db=False):
 
-    print('\nGetting Team''s salary cap infomation...')
+    print('\nGetting Team''s salary cap infomation...\n')
 
     url = 'https://www.basketball-reference.com/contracts/'
     html = urlopen(url)
@@ -112,8 +103,7 @@ def getTeamSalaryCapInfo(db):
     teams_contracts_table = soup.find('table')
     teams_contracts_table_rows = teams_contracts_table.find_all('tr')
 
-    teams_contracts_data   = list()
-
+    teams_contracts_data = list()
     for tr in teams_contracts_table_rows:
 
         # Row Data
@@ -121,41 +111,25 @@ def getTeamSalaryCapInfo(db):
         row_data = [str(i.text).replace(u'\xa0', '') for i in td]
         if row_data: teams_contracts_data.append(row_data)
 
-    teams_contract_dict = dict()
-
+    teams_to_contracts = dict()
     for team_contract_data in teams_contracts_data:
         team  = team_contract_data[0]
 
-        teams_contract_dict[team] = SalaryCapTeamInfo()
-        teams_contract_dict[team].year1 = team_contract_data[1]
-        teams_contract_dict[team].year2 = team_contract_data[2]
-        teams_contract_dict[team].year3 = team_contract_data[3]
-        teams_contract_dict[team].year4 = team_contract_data[4]
-        teams_contract_dict[team].year5 = team_contract_data[5]
-        teams_contract_dict[team].year6 = team_contract_data[6]
+        teams_to_contracts[team] = SalaryCapTeamInfo()
+        teams_to_contracts[team].year1 = team_contract_data[1]
+        teams_to_contracts[team].year2 = team_contract_data[2]
+        teams_to_contracts[team].year3 = team_contract_data[3]
+        teams_to_contracts[team].year4 = team_contract_data[4]
+        teams_to_contracts[team].year5 = team_contract_data[5]
+        teams_to_contracts[team].year6 = team_contract_data[6]
 
-    season = "2019-20"
     if db:
         cnxn = financialDB.connect("Teams", "SalaryCapOverview{}".format(season))
-        financialDB.insertTeamsSalaryCapInfo(cnxn, teams_contract_dict)
+        financialDB.insertTeamsSalaryCapInfo(cnxn, teams_to_contracts)
 
-def processCmdArgs():
-
-    parser = argparse.ArgumentParser(description='Collect teams salary cap infomation from https://www.basketball-reference.com/contracts/')
-
-    parser.add_argument('--teams', dest='teams', required=False, action='store_true',
-                         help='Scrape Teams Salary Cap Infomation Data')
-
-    parser.add_argument('--players', dest='players', required=False, action='store_true',
-                        help='Scrape Players contracts information')
-
-    parser.add_argument('--db', dest='db', required=False, action='store_true',
-                         help='Insert Data into Existing Table in Database')
-
-    return parser.parse_args()
 
 if __name__ == "__main__":
-    args = processCmdArgs()
+    args = utils.processCmdArgs()
 
-    if args.teams: getTeamSalaryCapInfo(args.db)
-    if args.players: getPlayerContracts(args.db)
+    if args.tscrape: getTeamSalaryCapInfo(args.season, db=args.db)
+    if args.pscrape: getPlayerContracts(args.season, db=args.db)

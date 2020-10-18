@@ -7,46 +7,21 @@ Description:
 
 TODO:
     - Investigate how to add Team Salary $ on top of bar when comparing teams
-    - Figure out better way than to hardcore values for Luxary Tax and Cap Min
+    - Figure out better way than to hardcode values for Luxary Tax and Cap Min
 '''
 
 
-import argparse
 import financialDB
 import matplotlib.pyplot as plt
-import os
 import pandas as pd
-import pyodbc
-import sys
+import utils
 
 
-# Add to Utils.py
-def getCmdTeam(cmdTeamAbr):
-    teams = [
-        ("ATL", "Atlanta Hawks"),          ("BOS", "Boston Celtics"),     ("BRK", "Brooklyn Nets"), 
-        ("CHO", "Charlotte Hornets"),      ("CHI", "Chicago Bulls"),      ("CLE", "Cleveland Cavaliers"), 
-        ("DAL", "Dallas Mavericks"),       ("DEN", "Denver Nuggets"),     ("DET", "Detroit Pistons"), 
-        ("GSW", "Golden State Warriors"),  ("HOU", "Houston Rockets"),    ("IND", "Indiana Pacers"),
-        ("LAC", "Los Angeles Clippers"),   ("LAL", "Los Angeles Lakers"), ("MEM", "Memphis Grizzlies"),
-        ("MIA", "Miami Heat"),             ("MIL", "Milwaukee Bucks"),    ("MIN", "Minnesota Timberwolves"),
-        ("NOP", "New Orleans Pelicans"),   ("NYK", "New York Knicks"),    ("OKC", "Oklahoma City Thunder"),
-        ("ORL", "Orlando Magic"),          ("PHI", "Philadelphia 76ers"), ("PHO", "Phoenix Suns"),
-        ("POR", "Portland Trail Blazers"), ("SAC", "Sacramento Kings"),   ("SAS", "San Antonio Spurs"),
-        ("TOR", "Toronto Raptors"),        ("UTA", "Utah Jazz"),          ("WAS", "Washington Wizards"),
-    ]
-
-    for team in teams:
-        if team[0] == cmdTeamAbr:
-            return team[1]
-
-    sys.exit('Invalid Team!')
-
-
-def getTeamsSalaryCapData(season, cmdTeamsAbr=None):
+def getTeamsSalaryCapData(season, teamsAbr=None):
 
     sql_table_df = financialDB.readTable("Teams", "SalaryCapOverview{}".format(season))
 
-    teams = [ getCmdTeam(cmdTeamAbr) for cmdTeamAbr in cmdTeamsAbr ]
+    teams = [ utils.getCmdTeam(teamAbr) for teamAbr in teamsAbr ]
 
     year1 = pd.DataFrame()
     if teams:
@@ -56,23 +31,21 @@ def getTeamsSalaryCapData(season, cmdTeamsAbr=None):
 
     year1[season] = year1[season].map(lambda x: x.replace(",", "").replace("$", "")).astype(int)
 
-    seasonAvg = sql_table_df[season].map(lambda x: x.replace(",", "").replace("$", "")).astype(int).mean()
+    league_avg = sql_table_df[season].map(lambda x: x.replace(",", "").replace("$", "")).astype(int).mean()
 
-    createPlot(year1, season, seasonAvg)
+    createPlot(year1, season, league_avg)
 
 
-def createPlot(data, season, seasonAvg):
+def createPlot(data, season, league_avg):
 
-    ax = data.plot(figsize=(10, 8), y=season, kind='bar')
+    ax = data.plot(figsize=(10, 8), y=season, kind='bar', legend=None)
 
-    # Edit Axis Labels
-    ax.set_title("Teams Salary Salary Cap: {} Season".format(season))
+    ax.set_title("Teams Salary Cap: {} Season".format(season))
     ax.set_xlabel("Teams")
     ax.set_ylabel("Salary")
     ax.set_xticklabels(data['Team'])
     plt.xticks(rotation=80)
 
-    # Set Y-Axis Limits
     ax.set_ylim(ymin=100000000)
     ax.set_ylim(ymax=140000000)
 
@@ -100,9 +73,9 @@ def createPlot(data, season, seasonAvg):
             fontsize = 7,
             horizontalalignment="right")
 
-    plt.axhline(y=seasonAvg, linestyle=':', linewidth=1, color='r')
-    ax.text(data_size, int(seasonAvg) + textIncrement, 
-            'Team Average - ${0:,.0f}'.format(int(seasonAvg)),
+    plt.axhline(y=league_avg, linestyle=':', linewidth=1, color='r')
+    ax.text(data_size, int(league_avg) + textIncrement, 
+            'League Average - ${0:,.0f}'.format(int(league_avg)),
             fontsize = 7,
             horizontalalignment="right")
 
@@ -112,26 +85,10 @@ def createPlot(data, season, seasonAvg):
             fontsize = 7,
             horizontalalignment="right")
 
-    # Display Plot
-    ax.get_legend().remove()
     plt.show()
 
 
-# Add to Utils.py
-def processCmdArgs():
-
-    parser = argparse.ArgumentParser(description='Plotting teams salary cap infomation from https://www.basketball-reference.com/contracts/')
-
-    parser.add_argument('--season', dest='season', type=str, metavar='', required=False, default='2019-20',
-                         help="Teams' Season for Salary Cap Infomation")
-
-    parser.add_argument('--teams', dest='teams', nargs='+', type=str, metavar='', required=False, default=list(),
-                         help="Abbreviated Teams City")
-
-    return parser.parse_args()
-
-
 if __name__ == "__main__":
-    args = processCmdArgs()
+    args = utils.processCmdArgs()
 
-    getTeamsSalaryCapData(season=args.season, cmdTeamsAbr=args.teams)
+    getTeamsSalaryCapData(season=args.season, teamsAbr=args.teams)

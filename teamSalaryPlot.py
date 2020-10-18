@@ -3,21 +3,22 @@ File:
     - teamSalaryPlot.py
 
 Description:
-    - Graphs a breakdown of team(s) contracts for its players
+    - Plotting teams salary cap infomation from https://www.basketball-reference.com/contracts/
 
 TODO:
     - Discover more options formatting plots
+    - Add individual player(s) option to line graph
+    - Better naming for varaibles and functions
 '''
 
 
-import argparse
 import financialDB
 import itertools
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import sys
+import utils
 
 
 class Team(dict):
@@ -31,7 +32,6 @@ class ContractInfo:
         self.contracts  = contracts
 
 
-# Add to Utils.py
 def getFutureSeasons(currentSeason, futureSeason):
     return [ "Guaranteed",
              str(currentSeason)   + '-' + str(futureSeason),
@@ -40,28 +40,6 @@ def getFutureSeasons(currentSeason, futureSeason):
              str(currentSeason+3) + '-' + str(futureSeason+3),
              str(currentSeason+4) + '-' + str(futureSeason+4),
              str(currentSeason+5) + '-' + str(futureSeason+5) ]
-
-
-# Add to Utils.py
-def getCmdTeam(teamAbr):
-    teams = [
-        ("ATL", "Atlanta Hawks"),          ("BOS", "Boston Celtics"),     ("BRK", "Brooklyn Nets"), 
-        ("CHO", "Charlotte Hornets"),      ("CHI", "Chicago Bulls"),      ("CLE", "Cleveland Cavaliers"), 
-        ("DAL", "Dallas Mavericks"),       ("DEN", "Denver Nuggets"),     ("DET", "Detroit Pistons"), 
-        ("GSW", "Golden State Warriors"),  ("HOU", "Houston Rockets"),    ("IND", "Indiana Pacers"),
-        ("LAC", "Los Angeles Clippers"),   ("LAL", "Los Angeles Lakers"), ("MEM", "Memphis Grizzlies"),
-        ("MIA", "Miami Heat"),             ("MIL", "Milwaukee Bucks"),    ("MIN", "Minnesota Timberwolves"),
-        ("NOP", "New Orleans Pelicans"),   ("NYK", "New York Knicks"),    ("OKC", "Oklahoma City Thunder"),
-        ("ORL", "Orlando Magic"),          ("PHI", "Philadelphia 76ers"), ("PHO", "Phoenix Suns"),
-        ("POR", "Portland Trail Blazers"), ("SAC", "Sacramento Kings"),   ("SAS", "San Antonio Spurs"),
-        ("TOR", "Toronto Raptors"),        ("UTA", "Utah Jazz"),          ("WAS", "Washington Wizards"),
-    ]
-
-    for team in teams:
-        if teamAbr == team[0]:
-            return team[1]
-
-    sys.exit('Invalid Team!')
 
 
 def getTeamsSalaryCapData(season, teamsAbr=None, cmdYears=None, compare=False, line=False):
@@ -76,7 +54,7 @@ def getTeamsSalaryCapData(season, teamsAbr=None, cmdYears=None, compare=False, l
         sql_table_df[year] = [0 if contract == '' else contract for contract in sql_table_df[year]]
         sql_table_df[year] = sql_table_df[year].astype(int)
 
-    teams = [ getCmdTeam(teamAbr) for teamAbr in teamsAbr ] if teamsAbr else sql_table_df['Team'].unique()
+    teams = [ utils.getCmdTeam(teamAbr) for teamAbr in teamsAbr ] if teamsAbr else sql_table_df['Team'].unique()
     teams_to_contracts = dict()
 
     # Get Contract Data
@@ -159,7 +137,6 @@ def createCompareSubplots(teams_to_contracts, seasons, teams):
     plt.show()
 
 
-#TODO: Add individual player(s) option
 def createLinePlot(teams_to_contracts, teams):
 
     players_to_contracts = dict()
@@ -258,31 +235,7 @@ def createMultiYearSubplots(teams_to_contracts, seasons, teams):
         plt.show()
 
 
-# Add to Utils.py
-def processCmdArgs():
-
-    parser = argparse.ArgumentParser(description='Plotting teams salary cap infomation from https://www.basketball-reference.com/contracts/')
-
-    parser.add_argument('--season', dest='season', type=str, metavar='', required=False, default='2019-20',
-                         help="Teams' Season for Salary Cap Infomation")
-
-    parser.add_argument('--teams', dest='teams', nargs='+', type=str, metavar='', required=False, default=list(),
-                         help="Abbreviated Teams City")
-
-    parser.add_argument('--years', dest='years', nargs='+', type=str, metavar='', required=False, default=list(),
-                         help="Selected Year(s)")
-
-    # TeamA YearA TeamB YearB
-    parser.add_argument('--compare', dest='compare', action='store_true', required=False,
-                         help='Compare Teams Seasons')
-
-    parser.add_argument('--line', dest='line', action='store_true', required=False,
-                         help='Line Graph Plot')
-
-    return parser.parse_args()
-
-
 if __name__ == "__main__":
-    args = processCmdArgs()
+    args = utils.processCmdArgs()
 
     getTeamsSalaryCapData(args.season, teamsAbr=args.teams, cmdYears=args.years, compare=args.compare, line=args.line)
