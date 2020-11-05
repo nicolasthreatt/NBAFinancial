@@ -9,6 +9,17 @@ Description:
 import argparse
 import sys
 
+
+def getFutureSeasons(currentSeason, futureSeason):
+    return [ "Guaranteed",
+             str(currentSeason)   + '-' + str(futureSeason),
+             str(currentSeason+1) + '-' + str(futureSeason+1),
+             str(currentSeason+2) + '-' + str(futureSeason+2),
+             str(currentSeason+3) + '-' + str(futureSeason+3),
+             str(currentSeason+4) + '-' + str(futureSeason+4),
+             str(currentSeason+5) + '-' + str(futureSeason+5) ]
+
+
 def getTeams():
     return [
              ("ATL", "Atlanta Hawks"),          ("BOS", "Boston Celtics"),     ("BRK", "Brooklyn Nets"), 
@@ -42,6 +53,14 @@ def processCmdArgs():
 
     parser.add_argument('--teams', dest='teams', nargs='+', type=str, metavar='', required=False, default=list(),
                          help="Abbreviated Teams City")
+
+    parser.add_argument('--players', dest='players', nargs='+', type=str, metavar='', required=False, default=list(),
+                         help="Player(s)")
+
+    parser.add_argument('--plot', dest='plot', nargs='?', type=str, metavar='', required=False,
+                        const='',
+                        choices=('bar', 'line', 'pie'),
+                        help='List of plot types')
 
     # salaryCapData.py
     parser.add_argument('--tscrape', dest='tscrape', required=False, action='store_true',
