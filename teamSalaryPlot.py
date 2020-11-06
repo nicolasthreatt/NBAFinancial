@@ -42,7 +42,7 @@ def getFutureSeasons(currentSeason, futureSeason):
              str(currentSeason+5) + '-' + str(futureSeason+5) ]
 
 
-def getTeamsSalaryCapData(season, teamsAbr=None, cmdYears=None, compare=False, line=False):
+def getTeamsSalaryCapData(season, teamsAbr=None, cmdYears=None, plot=None):
 
     sql_table_df  = financialDB.readTable("Players", "Payroll{}".format(season))
 
@@ -69,16 +69,16 @@ def getTeamsSalaryCapData(season, teamsAbr=None, cmdYears=None, compare=False, l
                                                                   contracts=year_sorted[year].loc[sql_table_df.Team == team])
 
     determinePlot(teams_to_contracts, teams, contractYears,
-                  compare=compare, line=line)
+                  plot)
 
 
-def determinePlot(teams_to_contracts, teams, contractYears, compare=False, line=False):
+def determinePlot(teams_to_contracts, teams, contractYears, plot):
 
-    if compare:
+    if plot == 'compare':
         createCompareSubplots(teams_to_contracts, contractYears, teams)
-    elif line:
+    elif plot == 'line':
         createLinePlot(teams_to_contracts, teams)
-    else:
+    elif plot == None:
         if (len(contractYears) == 1):
             createIndividualYearPlot(teams_to_contracts, contractYears, teams)
         else:
@@ -238,4 +238,4 @@ def createMultiYearSubplots(teams_to_contracts, seasons, teams):
 if __name__ == "__main__":
     args = utils.processCmdArgs()
 
-    getTeamsSalaryCapData(args.season, teamsAbr=args.teams, cmdYears=args.years, compare=args.compare, line=args.line)
+    getTeamsSalaryCapData(args.season, teamsAbr=args.teams, cmdYears=args.years, plot=args.plot)
