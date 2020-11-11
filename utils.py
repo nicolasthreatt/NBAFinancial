@@ -71,7 +71,7 @@ def processCmdArgs():
     parser.add_argument('--db', dest='db', required=False, action='store_true',
                         help='Insert Data into Existing Table in Database')                         
 
-    # teamSalaryPlot.py
+    # salaryCapPlot.py
     parser.add_argument('--years', dest='years', nargs='+', type=str, metavar='', required=False, default=list(),
                         help="Selected Year(s)")
 

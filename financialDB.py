@@ -1,8 +1,12 @@
 '''
-Steps to follow: https://docs.microsoft.com/en-us/sql/connect/python/pyodbc/python-sql-driver-pyodbc?view=sql-server-ver15
-Connect to Azure SQL Database: https://docs.microsoft.com/en-us/azure/azure-sql/database/connect-query-python?tabs=windows 
+File: financialDB.py
+
+Description:
+    - Steps to follow: https://docs.microsoft.com/en-us/sql/connect/python/pyodbc/python-sql-driver-pyodbc?view=sql-server-ver15
+    - Connect to Azure SQL Database: https://docs.microsoft.com/en-us/azure/azure-sql/database/connect-query-python?tabs=windows 
 '''
 
+import pandas as pd
 import pyodbc
 import os
 
@@ -25,19 +29,15 @@ def connect():
                            PWD='+ password)
     return cnxn
 
+
 def readTable(schema, table):
-    
-    import pandas as pd
 
     # Connect to Database
     cnxn = connect()
 
-    # Get Stats from Database
-    table = pd.read_sql_query(
-        '''SELECT *
-            FROM [{}].[{}]'''.format(schema, table), cnxn)
+    # Get All Columns from Database Table
+    return pd.read_sql_query('''SELECT * FROM [{}].[{}]'''.format(schema, table), cnxn)
 
-    return table
 
 def insertTeamsSalaryCapInfo(cnxn, teams):
 
@@ -63,6 +63,7 @@ def insertTeamsSalaryCapInfo(cnxn, teams):
 
     # Commit Inserts
     cnxn.commit()
+
 
 def insertPlayersPayrollInfo(cnxn, players):
 

@@ -2,8 +2,8 @@
 File: salaryCapSummary.py
 
 Description:
-    Scrapes from https://www.basketball-reference.com/contracts/ to collect teams salary cap data
-    and stores it into a cloud database
+    - Scrapes from https://www.basketball-reference.com/contracts/ to collect teams salary cap data
+    - Stores data into a cloud database
 '''
 
 
@@ -126,6 +126,8 @@ def getTeamSalaryCapInfo(season, db=False):
     if db:
         cnxn = financialDB.connect("Teams", "SalaryCapOverview{}".format(season))
         financialDB.insertTeamsSalaryCapInfo(cnxn, teams_to_contracts)
+
+    return teams_to_contracts
 
 
 if __name__ == "__main__":
