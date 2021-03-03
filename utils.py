@@ -75,4 +75,12 @@ def processCmdArgs():
     parser.add_argument('--years', dest='years', nargs='+', type=str, metavar='', required=False, default=list(),
                         help="Selected Year(s)")
 
+    # tradeSimulation.py
+    parser.add_argument('--srcTeams', dest='teams', nargs='+', type=str, metavar='', required=False, default=list(),
+                        help="Abbreviated Trade Teams")
+
+    parser.add_argument('--destTeams', dest='destTeams', nargs='+', type=str, metavar='', required=False, default=list(),
+                        help="Abbreviated Destination Trade Teams")
+    
+
     return parser.parse_args()

@@ -39,7 +39,7 @@ def getTeamsSalaryCapData(season, teamsAbr=None, plot=None):
     if plot == 'bar': 
         # Important Numbers (Need to move)
         salayCapMin = 109140000    # 2019-20 Season
-        luxuryTax   = 132627000    # 2019-20 Season
+        luxuryTax   = 132000000    # 2019-20 Season
 
         sql_table_df[season] = sql_table_df[season].map(lambda x: x.replace(",", "").replace("$", "")).astype(int)
         league_avg  = sql_table_df[season].mean() #TODO: GET MEAN FOR ALL TEAMS IN DB. MAYBE MAKE INTO FUNCTION
